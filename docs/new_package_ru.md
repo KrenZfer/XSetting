@@ -1,22 +1,22 @@
-## Как сделать пакет (плагин) в Orchid шаг за шагом. 
+## How to make a package (plugin) in Orchid step by step. 
  
-В данном уроке научимся создавать плагины для Orchid, отличие плагинов от проекта, в том что его можно легко подключать в другие проекты.
+In this lesson, we will learn how to create plugins for Orchid, the difference between plugins and a project is that it can be easily connected to other projects. 
 
-Наш плагин будет отображать [настройки](https://orchid.software/ru/docs/settings) Orchid, а также создаст возможность их редактировать.
+Our plugin will display [settings] (https://orchid.software/en/docs/settings) Orchid, and will also create the ability to edit them.
 
 ![](https://github.com/orchidcommunity/XSetting/blob/master/docs/imgs/create_plugin1.gif)
 
-Настройки легко выводятся в шаблонизаторе blade вот таким кодом ` {{setting('phone')}} `.
+The settings are easily displayed in the blade template engine like this `{{setting ('phone')}}`.
 
 
-### Директория и подключение плагина.
-Для начала нужно создать директорию где будут содержаться наши проекты.
+### Directory and plugin connection.
+First you need to create a directory where our projects will be contained.
 
-1. В корневой директории проекта создаем директорию package.  
+1. In the root directory of the project, create a directory called package.
 
-2. В директории package создадим папку нашего проекта. - Например XSetting. 
+2. In the package directory, create a folder for our project. - For example XSetting.
 
-В файле composer.json добавим пути к нашему проекту  
+In the composer.json file, add the paths to our project  
 ```
     "repositories": [ 
     { 
@@ -25,12 +25,12 @@
         "url": "/home/youproject/package/xsetting" 
     }, 
 ```
-Теперь при команде `composer require "orchids/xsetting"` композер будет искать проект также в нашей директории. 
-Выполнив эти действия также можно создать плагин не только под Orchid но и для любого проекта под Laravel.
-Конечно если вы подключите свой плагин к packagist.org то эти действия не понадобятся.
+Now, with the command `composer require" orchids / xsetting "`, the composer will also look for the project in our directory.
+After completing these steps, you can also create a plugin not only for Orchid but also for any project under Laravel.
+Of course, if you connect your plugin to packagist.org, then these steps are not needed.
 
-### Создание плагина.
-Создадим структуру пакета 
+### Creating a plugin.
+Let's create the package structure
 
 ```
 database/ migrations/2018_08_07_000000_create_options_for_settings_table.php
@@ -44,10 +44,10 @@ src/Http/Layouts/XSettingEditLayout.php
 Composer.json 
 ```
 
-Приступаем к разработке расширения.
+Let's start developing the extension.
 
 
-#### 1. Сначала создадим файл composer.json для Композера 
+#### 1. First, create a composer.json file for Composer
 ```
 {
   "name": "orchids/xsetting",
@@ -77,17 +77,17 @@ Composer.json
   "prefer-stable": true
 }
 ```
-Расшифровка основных параметров
-` "name": "orchids/xsetting", ` - при выполнении команды в консоли `composer require "orchids/xsetting"` композер обработает этот файл.
+Decoding of the main parameters
+`" name ":" orchids / xsetting ",` - when executing a command in the `composer require" orchids / xsetting "` console, the composer will process this file.
 
-` "require": {"orchid/platform":"dev-master"} ` - необходимые зависимости для установки пакета. 
+`" require ": {" orchid / platform ":" dev-master "}` - the required dependencies to install the package.
 
-`"psr-4": {"Orchids\\XSetting\\": "src/"}` - классы, у которых путь начинается с `Orchids\XSetting` будут соотнесены с каталогом `src/` в этом пакете.
+`" psr-4 ": {" Orchids \\ XSetting \\ ":" src / "}` - classes whose path starts with `Orchids \ XSetting` will be associated with the` src / `directory in this package.
 
-`"laravel": {"providers": [ "Orchids\\XSetting\\Providers\\XSettingProvider" ]} ` - После установки запустит провайдер по пути `src/Providers/XSettingProvider.php`
+`" laravel ": {" providers ": [" Orchids \\ XSetting \\ Providers \\ XSettingProvider "]}` - After installation, it will launch the provider along the path `src / Providers / XSettingProvider.php`
 
-#### 2. Теперь создадим класс провайдера который добавит маршрутизацию, возможность давать пользователям доступ к данному пакету, и добавит пункт нашего плагина в меню. 
-Создадим файл `src/Providers/XSettingProvider.php`
+#### 2. Now let's create a provider class that will add routing, the ability to give users access to this package, and add our plugin item to the menu.
+Create a file `src / Providers / XSettingProvider.php`
 ```
 namespace Orchids\XSetting\Providers;
 
@@ -101,9 +101,9 @@ class XSettingProvider extends ServiceProvider
     public function boot(Dashboard $dashboard)
     {
         $this->dashboard = $dashboard;
-        /* 
-        * Добавление разрешения доступа для пользователей и ролей. 
-        */
+        / *
+        * Adding access permissions for users and roles.
+        * /
         $this->app->booted(function () {
             $this->dashboard->registerPermissions(
                 ItemPermission::group(__('Systems'))
@@ -111,34 +111,34 @@ class XSettingProvider extends ServiceProvider
             );
         });
 		
-        /* 
-        * Подключение файла роутинга 
-        */	
+        / *
+        * Connecting the routing file
+        * /
         $this->loadRoutesFrom(realpath(XSETTING_PATH.'/routes/route.php')); 
     
-        /*
-        *Подключение класса добавления пункта меню 
-        */
-        View::composer('platform::systems', MenuComposer::class); //В системное меню  в центре
-        //View::composer('platform::layouts.dashboard', MenuComposer::class);  //В левое меню
+        / *
+        * Connecting a class adding a menu item
+        * /
+        View::composer('platform::systems', MenuComposer::class); // To the system menu in the center
+        //View::composer('platform::layouts.dashboard', MenuComposer::class);  // To the left menu
         
-        /* 
-        * Подключение файлов миграции для добавления их в базу данных нужно выполнить `php artisan migrate` 
-        */	
+        /*
+        * Including migration files to add them to the database, you need to execute `php artisan migrate`
+        */
         $this->loadMigrationsFrom(realpath(XSETTING_PATH.'/database/migrations'));
     }
 }
 ```
 
-#### 3. Для начала создадим файл роутинга, который будет определять какой экран отвечает за определенный маршрут.
-Создадим файл routes/route.php
+#### 3. First, let's create a routing file that will determine which screen is responsible for a particular route.
+Let's create a routes / route.php file
 
 ```
 use Orchids\XSetting\Http\Screens\XSettingEdit;
 use Orchids\XSetting\Http\Screens\XSettingList;
 
-Route::domain((string) config('platform.domain'))   //Загружает из конфига домен админки
-    ->prefix(Dashboard::prefix('/systems'))         //Загружает из конфига префикс админки и добавляет /systems
+Route::domain((string) config('platform.domain'))   // Loads the admin domain from the config
+    ->prefix(Dashboard::prefix('/systems'))         // Loads the admin prefix from the config and adds / systems
     ->middleware(config('platform.middleware.private'))
     ->group(function (\Illuminate\Routing\Router $router, $path='platform.xsetting.') {
         $router->screen('xsetting/{xsetting}/edit', XSettingEdit::class)->name($path.'edit');
@@ -146,9 +146,9 @@ Route::domain((string) config('platform.domain'))   //Загружает из к
         $router->screen('xsetting', XSettingList::class)->name($path.'list');
     });
 ```
-Теперь при генерации пути `route('platform.xsetting.list')` в браузере будет сгенерирован примерно такой адрес  `http://yousite.name/dashboard/systems/xsetting`, а при переходе на него роутинг запустить файл `src\Http\Screens\XSettingList.php`
+Now, when generating the path `route ('platform.xsetting.list')`, the browser will generate approximately the following address `http: // yousite.name / dashboard / systems / xsetting`, and when you switch to it, run the file` src \ Http \ Screens \ XSettingList.php`
 
-#### 4. Добавим в меню пункт настроек пункт с генерацией пути к `route('platform.xsetting.list')` (например в меню "Система"), для этого создадим файл ` src/Providers/MenuComposer.php `
+#### 4. Add an item to the settings menu with the generation of the path to `route ('platform.xsetting.list')` (for example, in the "System" menu), for this we will create a file `src / Providers / MenuComposer.php`
 ```
 namespace Orchids\XSetting\Providers;
 
@@ -165,20 +165,20 @@ class MenuComposer
         $this->dashboard->menu
             ->add('CMS',
                 ItemMenu::Label(__('Setting configuration'))
-                    ->Slug('XSetting')              //Уникальная строка содержащая только безопасные символы
-                    ->Icon('icon-settings')         //CSS код для графической иконки
-                    ->title(__('Setting description'))  // Название меню
-                    ->Route('platform.xsetting.list') //Путь, route() или ссылка
-                    ->Permission('platform.systems.xsetting') //Какими правами должен обладать пользователь
-                    ->Sort(7)           //Сортировка элементов меню 1/2/3/4
+                    ->Slug('XSetting')              // Unique string containing only safe characters
+                    ->Icon('icon-settings')         // CSS code for the graphic icon
+                    ->title(__('Setting description'))  // Menu title
+                    ->Route('platform.xsetting.list') // Path, route () or link
+                    ->Permission('platform.systems.xsetting') // What rights the user should have
+                    ->Sort(7)           // Sort menu items 1/2/3/4
             );
     }
 }
 ```
 
 
-#### 5. Теперь нужно добавить в базу данных столбец `options` содержащий дополнительные параметры данного ключа, для этого создадим файл миграции баз данных 
-`database/migrations/2018_08_07_000000_create_options_for_settings_table.php` содержащий 
+#### 5. Now you need to add the `options` column to the database containing additional parameters of this key, for this we will create a database migration file
+`database / migrations / 2018_08_07_000000_create_options_for_settings_table.php` containing
 ```
 public function up()
 {
@@ -195,7 +195,7 @@ public function down()
 ```
 
 
-#### 6. Также нужно создать модель которая описывает связи с базой данных, создадим файл src/Models/XSetting.php
+#### 6. You also need to create a model that describes the connections with the database, create a file src / Models / XSetting.php
 ```
 namespace Orchids\XSetting\Models;
 
@@ -219,8 +219,8 @@ class XSetting extends Setting
 }
 ```
 
-#### 7. Теперь осталось добавить экраны [Screens](https://orchid.software/ru/docs/screens) и макеты [Layouts](https://orchid.software/ru/docs/layouts)
-Добавим экран списка всех настроек, для этого создадим файл src/Http/Screens/XSettingList.php 
+#### 7. Now it remains to add screens [Screens] (https://orchid.software/ru/docs/screens) and layouts [Layouts] (https://orchid.software/en/docs/layouts)
+Let's add a screen for the list of all settings, for this we will create a file src / Http / Screens / XSettingList.php
 ```
 namespace Orchids\XSetting\Http\Screens;
 
@@ -239,22 +239,22 @@ class XSettingList extends Screen
     public function query() : array
     {
         return [
-            'settings' => XSetting::filters()->defaultSort('key', 'desc')->paginate(30)  //Переменная `settings` будет обработана в макете.
+            'settings' => XSetting::filters()->defaultSort('key', 'desc')->paginate(30)  // The variable `settings` will be processed in the layout.
         ];
     }
 
     public function layout() : array
     {
         return [
-            XSettingListLayout::class,   //Класс макета.
+            XSettingListLayout::class,   // Layout class.
         ];
     }
     
     public function commandBar() : array
     {
         return [
-            Button::make('Create a new setting')->method('create'),  //Добавить в верхнее меню пункт добавления настройки 
-								   //запустит функцию create()
+            Button::make('Create a new setting')->method('create'),  // Add an item for adding a setting to the top menu
+            // will run the create () function
         ];
     }
 
@@ -264,9 +264,9 @@ class XSettingList extends Screen
     }
 }
 ```
-Подробнее про создание экранов [ссылка](https://orchid.software/ru/docs/screens)
+More about creating screens [link] (https://orchid.software/ru/docs/screens)
 
-#### 8. Добавим макет вывода списка всех настроек, для этого создадим файл src/Http/Layouts/XSettingListLayout.php 
+#### 8. Add a layout for displaying a list of all settings, for this we will create a file src / Http / Layouts / XSettingListLayout.php 
 
 ```
 namespace Orchids\XSetting\Http\Layouts;
@@ -280,10 +280,10 @@ class XSettingListLayout extends Table
     public function columns() : array
     {
         return  [
-            TD::set('key','Key')        // Устновить имя переменной и заголовок столюца
-                ->link('platform.xsetting.edit','key','key'), // добавление ссылки, Параметры (ссылка для роутинга, опции роутинга, отображаемый текст)
+            TD::set('key','Key')         // Set variable name and column header
+                ->link('platform.xsetting.edit','key','key'), / add a link, Parameters (link for routing, routing options, display text)
             TD::set('options.title', 'Name')
-                ->setRender(function ($shortvar) {          //setRender - функция генерирует отображаемые данные
+                ->setRender(function ($shortvar) {          // setRender - the function generates the rendered data
                     return $shortvar->options['title'];
                 }),
             TD::set('value','Value')
@@ -297,9 +297,9 @@ class XSettingListLayout extends Table
     }
 }
 ```
-Подробнее про создание макетов [ссылка](https://orchid.software/ru/docs/layouts)
+More about creating layouts [link] (https://orchid.software/ru/docs/layouts)
 
-#### 9. Добавим экран создания и редактирования настройки, для этого создадим файл src/Http/Screens/XSettingEdit.php
+#### 9. Add a screen for creating and editing settings, for this we will create a file src / Http / Screens / XSettingEdit.php
 ```
 <?php
 namespace Orchids\XSetting\Http\Screens;
@@ -323,7 +323,7 @@ class XSettingEdit extends Screen
     {
         $xsetting = is_null($xsetting) ? new XSetting() : XSetting::where("key",$xsetting)->first();;
         return [
-            'xsetting'   => $xsetting,   //Переменная `xsetting` будет обработана в макете.
+            'xsetting'   => $xsetting,   // The variable `xsetting` will be processed in the layout.
         ];
     }
 
@@ -332,7 +332,7 @@ class XSettingEdit extends Screen
         return [
             Layouts::columns([
                 'EditSetting' => [
-                    XSettingEditLayout::class   //Макет который обработает данные
+                    XSettingEditLayout::class   // Layout that will process the data
                 ],
             ]),
         ];
@@ -341,15 +341,15 @@ class XSettingEdit extends Screen
     public function commandBar() : array
     {
         return [				
-            Link::make('Save')->method('save'),   //Добавить в верхнее меню пункт сохранения настройки обработает функция `save`
-            Link::make('Remove')->method('remove'), //Добавить в верхнее меню пункт удаления настройки обработает функция `remove`
+            Link::make('Save')->method('save'),   / Add the save option to the top menu, the save function will be processed by the `save` function
+            Link::make('Remove')->method('remove'), // Add a setting removal item to the top menu will be processed by the `remove` function
         ];
     }
 
-    public function save($request, XSetting $xsetting)   // Функция сохранения настройки
+    public function save($request, XSetting $xsetting)   // Save the setting
     {
 
-        $req = $this->request->get('xsetting');   // Заполненные данные 'xsetting' "вернуться" из макета
+        $req = $this->request->get('xsetting');   // Filled data 'xsetting' "return" from layout
 
         $xsetting->updateOrCreate(['key' => $req['key']], $req );
 
@@ -357,7 +357,7 @@ class XSettingEdit extends Screen
         return back();
     }
 	 
-    public function remove($request, XSetting $xsetting)  // Функция удаления настройки
+    public function remove($request, XSetting $xsetting)  // Function for removing the setting
     {
         $xsetting->where('id',$request)->delete();
         Alert::info('Setting was removed');
@@ -365,7 +365,7 @@ class XSettingEdit extends Screen
     }
 }
 ```
-#### 10. Осталось добавить макет редактирования настроек, создадим ` src/Http/Layouts/XSettingEditLayout.php `
+#### 10. It remains to add a layout for editing settings, create `src / Http / Layouts / XSettingEditLayout.php`
 ```
 namespace Orchids\XSetting\Http\Layouts;
 
@@ -378,11 +378,11 @@ class XSettingEditLayout extends Rows
 	public function fields(): array
     {
         return [
-            Field::tag('input')				//Поле input
+            Field::tag('input')				// Input field
                 ->name('xsetting.key')		
-                ->required()				//Обязательное
+                ->required()				// Required
                 ->max(255)
-                ->title('Key slug'),		//Заголовок
+                ->title('Key slug'),		// Title
             Field::tag('input')
                 ->name('xsetting.options.title')
                 ->required()
@@ -400,22 +400,22 @@ class XSettingEditLayout extends Rows
 }
 ```
 
-Подробнее про поля [ссылка](https://orchid.software/ru/docs/field)
+More about fields [link] (https://orchid.software/ru/docs/field)
 
-#### 11. Установка 
-- Запускаем в консоли `composer require "orchids/xsetting"`
-- Применим миграции `php artisan migrate`
-- В админке проставим доступ пользователю.
+#### 11. Installation
+- Run in the console `composer require" orchids / xsetting "`
+- Apply migrations `php artisan migrate`
+- In the admin panel, assign access to the user.
 
-[Ссылка на плагин на github](https://github.com/orchidcommunity/XSetting) 
+[Plugin link on github] (https://github.com/orchidcommunity/XSetting)
 
-#### Update from 12-08-18 
-В плагин была добавлена возможность выбора типа хранимых данных:
-- Input - строка
-- Textarea - Текст
-- Picture - Изображение (Например логотип компании)
-- CodeEditor (JSON) - любой массив в JSON виде.
-- CodeEditor (JavaScript) - JavaScript, HTML код (Например код гугл аналитики).
-- Tags - список слов, теги (Например ключевые слова в `meta name="keywords"`).
+#### Update from 12-08-18
+The plugin has been added the ability to select the type of stored data:
+- Input - string
+- Textarea - Text
+- Picture - Image (For example, company logo)
+- CodeEditor (JSON) - any JSON array.
+- CodeEditor (JavaScript) - JavaScript, HTML code (For example, google analytics code).
+- Tags - a list of words, tags (For example, keywords in `meta name =" keywords "`).
 
 ![](https://github.com/orchidcommunity/XSetting/blob/master/docs/imgs/create_plugin2.gif)
